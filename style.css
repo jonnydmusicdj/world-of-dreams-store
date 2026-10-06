@@ -2234,3 +2234,112 @@ header.wp-block-template-part,
 .wod-flow-panel {
     margin-bottom: 0 !important;
 }
+
+/* =========================================================
+   22. MOBILE-FIRST + CHECKOUT DRAWER + FOOTER (FIX)
+   ========================================================= */
+/* --- Header mobile (max 64px) --- */
+@media (max-width: 767px) {
+    .site-header,
+    header.wp-block-template-part {
+        max-height: 64px !important;
+        padding: 8px 12px !important;
+    }
+    .wp-block-site-title,
+    .wp-block-site-title a,
+    .site-title {
+        white-space: nowrap !important;
+        font-size: 13px !important;
+        line-height: 1.2 !important;
+    }
+    .site-header .wp-block-group,
+    header.wp-block-template-part .wp-block-group {
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+    }
+}
+
+/* --- Menu mobile aberto: limpeza visual --- */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item__content {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: #ffffff !important;
+    padding: 14px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    text-decoration: none !important;
+}
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item__content:hover {
+    color: #d4af37 !important;
+    border-bottom-color: rgba(212, 175, 55, 0.4) !important;
+}
+
+/* --- Cart drawer: botão checkout alto contraste --- */
+.wc-block-mini-cart__drawer .wc-block-components-checkout-button,
+.wc-block-mini-cart__drawer a[href*="checkout"],
+.wc-block-mini-cart__drawer a[href*="finalizar-compras"],
+.wc-block-mini-cart__drawer .wp-element-button {
+    background-color: #d4af37 !important;
+    background: #d4af37 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+    border-radius: 8px !important;
+    padding: 14px 16px !important;
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25) !important;
+}
+
+/* Botão secundário "Ver carrinho" */
+.wc-block-mini-cart__drawer .wc-block-mini-cart__cart-button,
+.wc-block-mini-cart__drawer a[href*="carrinho"],
+.wc-block-mini-cart__drawer a[href*="cart"] {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+/* --- Footer: encosto na base (flexbox) --- */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+#view-fullsite,
+.wp-site-blocks {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+footer {
+    margin-top: auto;
+}
+
+/* --- Grelha de produto mobile --- */
+@media (max-width: 767px) {
+    .wod-nav-arrows {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    .wod-product-card {
+        flex: 0 0 78vw !important;
+        max-width: 300px !important;
+        min-height: auto !important;
+    }
+    .wod-product-card img {
+        object-fit: contain !important;
+        aspect-ratio: 1 / 1 !important;
+        max-height: 260px !important;
+    }
+}
