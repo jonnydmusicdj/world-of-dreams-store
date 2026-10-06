@@ -1,0 +1,9 @@
+# Dependências
+node_modules/
+
+# Artefactos gerados pela auditoria
+tests/screenshots/
+tests/audit-report.json
+
+# Sistema operativo
+.DS_Store

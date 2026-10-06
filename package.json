@@ -1,0 +1,31 @@
+{
+  "name": "world-of-dreams-store",
+  "version": "1.0.0",
+  "description": "Tema Extendable personalizado para a loja World of Dreams (shop.worldofdreams.pt) + suite de auditoria headless (Puppeteer).",
+  "main": "audit-store.js",
+  "private": true,
+  "scripts": {
+    "audit": "node audit-store.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonnydmusicdj/world-of-dreams-store.git"
+  },
+  "keywords": [
+    "wordpress",
+    "woocommerce",
+    "block-theme",
+    "design-system",
+    "puppeteer"
+  ],
+  "author": "",
+  "license": "GPL-2.0-or-later",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jonnydmusicdj/world-of-dreams-store/issues"
+  },
+  "homepage": "https://github.com/jonnydmusicdj/world-of-dreams-store#readme",
+  "devDependencies": {
+    "puppeteer": "^25.12.0"
+  }
+}
