@@ -524,12 +524,9 @@ add_filter( 'rest_post_dispatch', 'extendable_filter_global_styles_rest_response
  *
  * @since Extendable 2.5.0
  */
-add_filter( 'woocommerce_product_add_to_cart_text', 'extendable_add_to_cart_text', 20, 2 );
+add_filter( 'woocommerce_product_add_to_cart_text', 'extendable_add_to_cart_text', 99, 2 );
 function extendable_add_to_cart_text( $text, $product ) {
-	if ( $product && $product->is_type( 'variable' ) ) {
-		return __( 'VER PRODUTO', 'woocommerce' );
-	}
-	return $text;
+	return __( 'VER PRODUTO', 'woocommerce' );
 }
 
 /**
