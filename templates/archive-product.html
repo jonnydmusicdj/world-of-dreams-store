@@ -1,0 +1,58 @@
+<!-- wp:template-part {"slug":"header","theme":"extendable","tagName":"header"} /-->
+
+<!-- wp:spacer {"height":"2rem"} /-->
+
+<!-- wp:group {"className":"wod-showcase-container","layout":{"type":"constrained"}} -->
+<div class="wp-block-group wod-showcase-container">
+<!-- wp:group {"className":"wod-showcase-box wod-box-red","layout":{"type":"constrained"}} -->
+<div class="wp-block-group wod-showcase-box wod-box-red">
+<!-- wp:group {"className":"wod-box-header","layout":{"type":"flex","justifyContent":"space-between","flexWrap":"nowrap"}} -->
+<div class="wp-block-group wod-box-header">
+    <!-- wp:group {"layout":{"type":"flex","orientation":"vertical"}} -->
+    <div class="wp-block-group">
+        <!-- wp:paragraph {"className":"wod-box-tag"} -->
+        <p class="wod-box-tag">MERCHANDISE OFICIAL</p>
+        <!-- /wp:paragraph -->
+        <!-- wp:heading {"className":"wod-box-title","level":2} -->
+        <h2 class="wod-box-title">MONTRA COMPLETA</h2>
+        <!-- /wp:heading -->
+    </div>
+    <!-- /wp:group -->
+<!-- wp:buttons {"className":"wod-nav-arrows","layout":{"type":"flex","justifyContent":"flex-end"}} -->
+<div class="wp-block-buttons wod-nav-arrows">
+    <!-- wp:button {"className":"wod-arrow-btn","style":{"border":{"radius":"9999px"}}} -->
+    <div class="wp-block-button wod-arrow-btn"><a class="wp-block-button__link wp-element-button" href="#">&lt;</a></div>
+    <!-- /wp:button -->
+    <!-- wp:button {"className":"wod-arrow-btn","style":{"border":{"radius":"9999px"}}} -->
+    <div class="wp-block-button wod-arrow-btn"><a class="wp-block-button__link wp-element-button" href="#">&gt;</a></div>
+    <!-- /wp:button -->
+</div>
+<!-- /wp:buttons -->
+</div>
+<!-- /wp:group -->
+<!-- wp:woocommerce/product-query {"queryId":0,"query":{"perPage":30,"pages":0,"offset":0,"postType":"product","order":"asc","orderBy":"title","author":"","search":"","exclude":[],"sticky":"","inherit":true},"className":"wod-carousel-track","align":"wide"} -->
+<div class="wp-block-woocommerce-product-query wod-carousel-track alignwide">
+    <!-- wp:post-template -->
+    <!-- wp:group {"className":"wod-product-card","layout":{"type":"constrained"}} -->
+    <div class="wp-block-group wod-product-card">
+        <!-- wp:woocommerce/product-image {"imageSizing":"thumbnail","isDescendentOfQueryLoop":true} /-->
+        <!-- wp:post-title {"level":2,"isLink":true,"className":"wod-card-title","__woocommerceNamespace":"woocommerce/product-query/product-title"} /-->
+        <!-- wp:post-excerpt {"className":"wod-card-desc"} /-->
+        <!-- wp:woocommerce/product-price {"isDescendentOfQueryLoop":true,"className":"wod-card-price"} /-->
+        <!-- wp:woocommerce/product-button {"isDescendentOfQueryLoop":true,"className":"wod-card-btn"} /-->
+    </div>
+    <!-- /wp:group -->
+    <!-- /wp:post-template -->
+    <!-- wp:query-no-results -->
+    <!-- wp:paragraph -->
+    <p>Nenhum produto encontrado nesta coleção.</p>
+    <!-- /wp:paragraph -->
+    <!-- /wp:query-no-results -->
+</div>
+<!-- /wp:woocommerce/product-query -->
+</div>
+<!-- /wp:group -->
+</div>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer-social-icons","theme":"extendable"} /-->
