@@ -43,7 +43,7 @@ const PAGES = [
   { name: 'home', label: 'Home', url: `${BASE_URL}/` },
   { name: 'catalog', label: 'Catálogo', url: `${BASE_URL}/categoria-produto/dreams-of/` },
   { name: 'product', label: 'Ficha de Produto', url: `${BASE_URL}/produto/dreams-of-tugalandia-%c2%b7-t-shirt-preta-%c2%b7-gola-redonda/` },
-  { name: 'checkout', label: 'Checkout', url: `${BASE_URL}/finalizar-compras/` },
+  { name: 'checkout', label: 'Checkout', url: `${BASE_URL}/finalizar-compra/` },
 ];
 
 const SCREENSHOT_DIR = path.join(__dirname, 'tests', 'screenshots');
