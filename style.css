@@ -2036,3 +2036,47 @@ header a:hover {
     object-fit: contain !important;
     max-width: 100% !important;
 }
+
+/* =========================================================
+   18. NORMALIZAÇÃO DOS CARTÕES DE PRODUTO (CARROSSEL)
+   ========================================================= */
+.wod-product-card {
+    min-height: 480px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+.wod-product-card .wc-block-components-product-button,
+.wod-product-card .wp-block-woocommerce-product-button,
+.wod-product-card .wp-block-button {
+    margin-top: auto !important;
+}
+
+/* Carrossel horizontal no frontend público (post-template em <ul>) */
+.wod-carousel-track ul.wp-block-post-template {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 1.25rem !important;
+    width: max-content !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.wod-carousel-track ul.wp-block-post-template > li {
+    flex: 0 0 280px !important;
+    scroll-snap-align: start !important;
+    margin: 0 !important;
+    width: 280px !important;
+}
+
+/* Reforço glassmorphism na página 404 */
+.wod-404-container {
+    background: rgba(13, 15, 26, 0.75) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    margin: 40px auto !important;
+}
