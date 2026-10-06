@@ -2080,3 +2080,51 @@ header a:hover {
     border-radius: 16px !important;
     margin: 40px auto !important;
 }
+
+/* =========================================================
+   19. MINI-CART DRAWER (TOMORROWLAND STYLE)
+   ========================================================= */
+.wc-block-mini-cart__drawer {
+    background: rgba(10, 10, 14, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+    width: 440px !important;
+    max-width: 100% !important;
+}
+
+.wc-block-mini-cart__drawer,
+.wc-block-mini-cart__drawer * {
+    color: #e5e7eb !important;
+}
+
+.wc-block-mini-cart__drawer img {
+    object-fit: contain !important;
+}
+
+.wc-block-mini-cart__drawer .wc-block-mini-cart__footer .wc-block-mini-cart__checkout-button {
+    background: #d4af37 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    border-radius: 8px !important;
+    padding: 14px !important;
+    text-transform: uppercase !important;
+    border: none !important;
+}
+
+.wc-block-mini-cart__drawer .wc-block-mini-cart__footer .wc-block-mini-cart__checkout-button:hover {
+    background: #f5c518 !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important;
+}
+
+.wc-block-mini-cart__drawer .wc-block-mini-cart__footer .wc-block-components-button.is-link {
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+}
+
+@media (max-width: 782px) {
+    .wc-block-mini-cart__drawer {
+        width: 100% !important;
+    }
+}

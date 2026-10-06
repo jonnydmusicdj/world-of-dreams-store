@@ -500,3 +500,117 @@ function extendable_filter_global_styles_rest_response( $response, $handler, $re
 	return $response;
 }
 add_filter( 'rest_post_dispatch', 'extendable_filter_global_styles_rest_response', 10, 3 );
+
+/**
+ * Catalog buttons: use "VER PRODUTO" for variable products.
+ *
+ * @since Extendable 2.5.0
+ */
+add_filter( 'woocommerce_product_add_to_cart_text', 'extendable_add_to_cart_text', 20, 2 );
+function extendable_add_to_cart_text( $text, $product ) {
+	if ( $product && $product->is_type( 'variable' ) ) {
+		return __( 'VER PRODUTO', 'woocommerce' );
+	}
+	return $text;
+}
+
+/**
+ * One-time auto-tagging of products by keyword.
+ *
+ * Runs only once, guarded by the `wod_tags_synced_v3` option.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_sync_product_tags_v3() {
+	if ( get_option( 'wod_tags_synced_v3' ) ) {
+		return;
+	}
+
+	$mapping = array(
+		'Tugalândia'   => 'Tugalândia',
+		'Hippie Ibiza' => 'Hippie Ibiza',
+		'Zucalatina'   => 'Zucalatina',
+		'Electronic'   => 'Electronic',
+		'Jonny D'      => 'Jonny D',
+	);
+
+	$product_ids = get_posts(
+		array(
+			'post_type'   => 'product',
+			'post_status' => 'publish',
+			'numberposts' => -1,
+			'fields'      => 'ids',
+		)
+	);
+
+	foreach ( $product_ids as $product_id ) {
+		$title = get_the_title( $product_id );
+		$tags  = array();
+
+		foreach ( $mapping as $keyword => $tag ) {
+			if ( false !== stripos( $title, $keyword ) ) {
+				$tags[] = $tag;
+			}
+		}
+
+		if ( ! empty( $tags ) ) {
+			wp_set_object_terms( $product_id, $tags, 'product_tag', true );
+		}
+	}
+
+	update_option( 'wod_tags_synced_v3', true );
+}
+add_action( 'init', 'extendable_sync_product_tags_v3' );
+
+/**
+ * Public REST endpoint for real-time price sync.
+ *
+ * GET /wp-json/wod/v1/prices
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_register_prices_route() {
+	register_rest_route(
+		'wod/v1',
+		'/prices',
+		array(
+			'methods'             => 'GET',
+			'callback'            => 'extendable_prices_callback',
+			'permission_callback' => '__return_true',
+		)
+	);
+}
+add_action( 'rest_api_init', 'extendable_register_prices_route' );
+
+function extendable_prices_callback() {
+	$products = get_posts(
+		array(
+			'post_type'   => 'product',
+			'post_status' => 'publish',
+			'numberposts' => -1,
+		)
+	);
+
+	$data = array();
+
+	foreach ( $products as $post ) {
+		$product = wc_get_product( $post );
+		if ( ! $product ) {
+			continue;
+		}
+
+		$data[] = array(
+			'slug'          => $product->get_slug(),
+			'sku'           => $product->get_sku(),
+			'regular_price' => $product->get_regular_price(),
+			'sale_price'    => $product->get_sale_price(),
+			'price'         => $product->get_price(),
+			'stock_status'  => $product->get_stock_status(),
+		);
+	}
+
+	$response = new WP_REST_Response( $data, 200 );
+	$response->header( 'Access-Control-Allow-Origin', '*' );
+
+	return $response;
+}
