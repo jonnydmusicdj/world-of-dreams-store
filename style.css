@@ -2165,3 +2165,72 @@ header a:hover {
     .wod-carousel-track ul.wp-block-post-template > li { flex: 0 0 240px !important; width: 240px !important; }
     .wod-single-product-container { gap: 28px !important; padding: 24px !important; }
 }
+
+/* =========================================================
+   21. FUNIL DE COMPRA (AJAX, HEADER, DRAWER, CARRINHO, CHECKOUT)
+   ========================================================= */
+/* Ocultar aviso estático redundante no single product */
+.woocommerce-notices-wrapper .woocommerce-message {
+    display: none !important;
+}
+
+/* Blindagem do header fixo (stacking context) */
+header.wp-block-template-part,
+.site-header,
+.wod-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999999 !important;
+}
+
+/* Neutralizar transform nos cartões (evita contexto de empilhamento) */
+.wod-product-card,
+.wod-product-card:hover {
+    transform: none !important;
+}
+
+/* Cart Drawer: contraste de texto */
+.wc-block-mini-cart__drawer {
+    color: #ffffff !important;
+}
+.wc-block-mini-cart__drawer .wc-block-mini-cart__items,
+.wc-block-mini-cart__drawer .wc-block-components-product-metadata,
+.wc-block-mini-cart__drawer .wc-block-components-totals-item,
+.wc-block-mini-cart__drawer .wc-block-mini-cart__totals {
+    color: #dddddd !important;
+}
+
+/* Cart Drawer: botão checkout */
+.wc-block-mini-cart__drawer .wc-block-mini-cart__checkout-button {
+    background: #d4af37 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    padding: 14px !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    border: none !important;
+    text-transform: uppercase !important;
+}
+
+/* Cart Drawer: botão secundário "Ver carrinho" */
+.wc-block-mini-cart__drawer .wc-block-mini-cart__cart-button {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+}
+
+/* Carrinho: resumo e acordeão de cupão */
+.wc-block-cart__totals,
+.wc-block-components-totals-coupon,
+.wc-block-components-panel {
+    background: rgba(20, 20, 26, 0.7) !important;
+    color: #e5e7eb !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Eliminar margem/gap em excesso acima do footer */
+.wod-flow-panel {
+    margin-bottom: 0 !important;
+}

@@ -154,6 +154,24 @@ function extendable_relative_shop_permalink( $link ) {
 add_filter( 'woocommerce_get_shop_page_permalink', 'extendable_relative_shop_permalink' );
 
 /**
+ * Enqueue the AJAX add-to-cart + drawer script on the frontend.
+ *
+ * @since Extendable 2.5.0
+ *
+ * @return void
+ */
+function extendable_enqueue_add_to_cart_ajax() {
+	wp_enqueue_script(
+		'extendable-add-to-cart',
+		get_template_directory_uri() . '/assets/js/wod-add-to-cart.js',
+		array( 'jquery' ),
+		EXTENDABLE_THEME_VERSION,
+		true
+	);
+}
+add_action( 'wp_enqueue_scripts', 'extendable_enqueue_add_to_cart_ajax' );
+
+/**
  * Registers pattern categories.
  *
  * @since Extendable 1.0
