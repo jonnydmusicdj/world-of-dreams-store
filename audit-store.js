@@ -75,9 +75,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 /* =========================================================
  * Helpers de browser
  * ========================================================= */
+function bust(url) {
+  // Cache-busting: ultrapassa page cache / CDN que ainda sirva o HTML antigo
+  // ("coming soon") para o URL canónico. O query param não afeta o conteúdo.
+  const sep = url.indexOf('?') === -1 ? '?' : '&';
+  return `${url}${sep}_wod_audit=${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
 async function goto(page, url) {
   try {
-    const resp = await page.goto(url, { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+    const resp = await page.goto(bust(url), { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
     return { ok: true, status: resp ? resp.status() : null };
   } catch (err) {
     return { ok: false, status: null, error: err.message };
