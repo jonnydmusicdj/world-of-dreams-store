@@ -778,44 +778,27 @@ add_action( 'init', 'extendable_sync_jonny_d_stock', 20 );
  * @since Extendable 2.5.0
  */
 function extendable_sync_jonny_d_prices() {
-	if ( get_option( 'wod_jonnyd_prices_synced_v1' ) ) {
+	if ( get_option( 'wod_jonnyd_prices_synced_v2' ) ) {
 		return;
 	}
 	if ( ! function_exists( 'wc_get_product' ) ) {
 		return;
 	}
 
-	$product_ids = array( 243, 244 );
-	$price       = '20';
+	$price = '20';
 
-	foreach ( $product_ids as $product_id ) {
-		$product = wc_get_product( $product_id );
-		if ( ! $product ) {
-			continue;
-		}
+	// IDs hardcoded para máxima robustez: produtos pai + respetivas variações.
+	$ids = array( 243, 244, 255, 256, 257, 258, 261, 262, 263, 264 );
 
-		// Preço de cada variação (255–258 e 261–264).
-		foreach ( $product->get_children() as $variation_id ) {
-			$variation = wc_get_product( $variation_id );
-			if ( ! $variation ) {
-				continue;
-			}
-
-			$variation->set_regular_price( $price );
-			$variation->set_price( $price );
-			$variation->save();
-		}
-
-		// Preço do produto pai (variável).
-		$product->set_regular_price( $price );
-		$product->set_price( $price );
-		$product->save();
+	foreach ( $ids as $id ) {
+		update_post_meta( $id, '_regular_price', $price );
+		update_post_meta( $id, '_price', $price );
 	}
 
 	// Recalcula a disponibilidade e a gama de preços dos produtos pai.
 	wc_delete_product_transients( 243 );
 	wc_delete_product_transients( 244 );
 
-	update_option( 'wod_jonnyd_prices_synced_v1', true );
+	update_option( 'wod_jonnyd_prices_synced_v2', true );
 }
 add_action( 'init', 'extendable_sync_jonny_d_prices', 25 );
