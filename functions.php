@@ -794,11 +794,6 @@ function extendable_sync_jonny_d_prices() {
 			continue;
 		}
 
-		// Preço do produto pai (variável).
-		$product->set_regular_price( $price );
-		$product->set_price( $price );
-		$product->save();
-
 		// Preço de cada variação (255–258 e 261–264).
 		foreach ( $product->get_children() as $variation_id ) {
 			$variation = wc_get_product( $variation_id );
@@ -811,9 +806,15 @@ function extendable_sync_jonny_d_prices() {
 			$variation->save();
 		}
 
-		// Força o recálculo do range de preços do produto pai.
-		wc_delete_product_transients( $product_id );
+		// Preço do produto pai (variável).
+		$product->set_regular_price( $price );
+		$product->set_price( $price );
+		$product->save();
 	}
+
+	// Recalcula a disponibilidade e a gama de preços dos produtos pai.
+	wc_delete_product_transients( 243 );
+	wc_delete_product_transients( 244 );
 
 	update_option( 'wod_jonnyd_prices_synced_v1', true );
 }
