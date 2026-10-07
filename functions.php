@@ -578,6 +578,56 @@ function extendable_sync_product_tags_v3() {
 add_action( 'init', 'extendable_sync_product_tags_v3' );
 
 /**
+ * One-time auto-assignment of product brands (product_brand) by keyword.
+ *
+ * Runs only once, guarded by the `wod_brands_synced_v1` option.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_sync_product_brands() {
+	if ( get_option( 'wod_brands_synced_v1' ) ) {
+		return;
+	}
+
+	// Aguardar que a taxonomia de marca (product_brand) esteja registada.
+	if ( ! taxonomy_exists( 'product_brand' ) ) {
+		return;
+	}
+
+	$mapping = array(
+		'Dreams Of' => 'Dreams Of',
+		'JONNY D'   => 'Jonny D',
+	);
+
+	$product_ids = get_posts(
+		array(
+			'post_type'   => 'product',
+			'post_status' => 'publish',
+			'numberposts' => -1,
+			'fields'      => 'ids',
+		)
+	);
+
+	foreach ( $product_ids as $product_id ) {
+		$title  = get_the_title( $product_id );
+		$brands = array();
+
+		foreach ( $mapping as $keyword => $brand ) {
+			if ( false !== stripos( $title, $keyword ) ) {
+				$brands[] = $brand;
+			}
+		}
+
+		if ( ! empty( $brands ) ) {
+			wp_set_object_terms( $product_id, $brands, 'product_brand', true );
+		}
+	}
+
+	update_option( 'wod_brands_synced_v1', true );
+}
+add_action( 'init', 'extendable_sync_product_brands', 20 );
+
+/**
  * Public REST endpoint for real-time price sync.
  *
  * GET /wp-json/wod/v1/prices
