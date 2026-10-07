@@ -802,3 +802,51 @@ function extendable_sync_jonny_d_prices() {
 	update_option( 'wod_jonnyd_prices_synced_v2', true );
 }
 add_action( 'init', 'extendable_sync_jonny_d_prices', 25 );
+
+/**
+ * Injeta a camada fixa de fundo #fixed-stage-bg no início do <body>.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_stage_bg_markup() {
+	echo '<div id="fixed-stage-bg" aria-hidden="true"></div>';
+}
+add_action( 'wp_body_open', 'extendable_stage_bg_markup' );
+
+/**
+ * Injeta dinamicamente a imagem de fundo da página ativa no #fixed-stage-bg.
+ *
+ * - Categoria de produto (is_product_category) com imagem (thumbnail_id)
+ *   → usa essa imagem.
+ * - Sem imagem na categoria, ou página inicial (is_front_page) → usa a
+ *   imagem padrão Terra/Espaço da home.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_inject_stage_bg_css() {
+	$bg_url = '';
+
+	if ( is_product_category() ) {
+		$term_id  = get_queried_object_id();
+		$thumb_id = get_term_meta( $term_id, 'thumbnail_id', true );
+		if ( $thumb_id ) {
+			$bg_url = wp_get_attachment_url( $thumb_id );
+		}
+	}
+
+	if ( empty( $bg_url ) ) {
+		// Padrão: Terra/Espaço (da home).
+		$bg_url = apply_filters(
+			'wod_default_stage_bg',
+			'https://shop.worldofdreams.pt/wp-content/uploads/2026/10/foto-terra-home-final-comprimida.webp'
+		);
+	}
+
+	if ( $bg_url ) {
+		printf(
+			'<style id="wod-stage-bg-inline">#fixed-stage-bg{background-image:url(%s) !important;}</style>',
+			esc_url( $bg_url )
+		);
+	}
+}
+add_action( 'wp_head', 'extendable_inject_stage_bg_css' );
