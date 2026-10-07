@@ -10,7 +10,9 @@
  *        document.body.scrollWidth <= window.innerWidth
  *   2. Abertura/fecho do menu mobile sem transbordo.
  *   3. Abertura do Cart Drawer por AJAX ao submeter o formulário do produto.
- *   4. Capturas de ecrã em tests/screenshots/ + relatório JSON em
+ *   4. E2E real do checkout com artigo no cesto (sem redirect p/ carrinho,
+ *      formulário de finalização presente, anti-transbordo nos 3 viewports).
+ *   5. Capturas de ecrã em tests/screenshots/ + relatório JSON em
  *      tests/audit-report.json.
  *
  * Uso:
@@ -82,12 +84,45 @@ function bust(url) {
   return `${url}${sep}_wod_audit=${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function hasBust(url) {
+  return /[?&]_wod_audit=/.test(url);
+}
+
 async function goto(page, url) {
+  // Navegação "limpa": aplica cache-bust e, se um redirect descartar o
+  // parâmetro (ex.: /finalizar-compra/ -> /carrinho/), reaplica-o na URL
+  // final para evitar HTML em cache ("coming soon") / falsos positivos.
   try {
-    const resp = await page.goto(bust(url), { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+    let resp = await page.goto(bust(url), { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+    if (!hasBust(page.url())) {
+      resp = await page.goto(bust(page.url()), { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+    }
     return { ok: true, status: resp ? resp.status() : null };
   } catch (err) {
     return { ok: false, status: null, error: err.message };
+  }
+}
+
+async function rawGoto(page, url) {
+  // Navegação "crua" (sem reaplicar cache-bust): usada no E2E do checkout
+  // para detetar o redirect 302 -> /carrinho/.
+  try {
+    const initial = bust(url);
+    const resp = await page.goto(initial, { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+    const finalUrl = page.url();
+    let redirectChain = [];
+    try {
+      redirectChain = resp.request().redirectChain().map((r) => r.url());
+    } catch {}
+    return {
+      ok: true,
+      status: resp ? resp.status() : null,
+      finalUrl,
+      redirectChain,
+      redirected: redirectChain.length > 0,
+    };
+  } catch (err) {
+    return { ok: false, status: null, finalUrl: page.url(), redirectChain: [], redirected: false, error: err.message };
   }
 }
 
@@ -110,6 +145,66 @@ function assertOverflow(state, label) {
   record(`${label} · sem transbordo`, ok ? 'pass' : 'fail',
     `document: ${docScrollWidth} vs ${innerWidth} (${docOk ? 'ok' : 'TRANSBORDO'}), body: ${bodyScrollWidth} (${bodyOk ? 'ok' : 'TRANSBORDO'})`);
   return ok;
+}
+
+/* =========================================================
+ * Helpers de add-to-cart (AJAX) — partilhados
+ * ========================================================= */
+async function addFirstVariationToCart(page) {
+  // Retorna true se o botão de adicionar foi efetivamente clicado.
+  const hasForm = await page.evaluate(() =>
+    !!(document.querySelector('form.cart') || document.querySelector('form.variations_form'))
+  );
+  if (!hasForm) return false;
+
+  // Selecionar a primeira variação (tamanho) disponível, se existir.
+  await page.evaluate(() => {
+    const sel = document.querySelector('form.cart select, form.variations_form select, .variations select');
+    if (sel) {
+      const opt = Array.from(sel.options).find((o) => o.value && o.value !== '0');
+      if (opt) {
+        sel.value = opt.value;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  });
+
+  await sleep(600);
+
+  // Aguardar a resolução da variação (variation_id preenchido).
+  await page
+    .waitForFunction(
+      () => {
+        const id = document.querySelector('input[name="variation_id"]');
+        return !id || (id.value && id.value !== '' && id.value !== '0');
+      },
+      { timeout: 8000 }
+    )
+    .catch(() => {});
+
+  return page.evaluate(() => {
+    const btn = document.querySelector(
+      'form.cart button[type="submit"], form.variations_form button[type="submit"], button.single_add_to_cart_button, form.cart .single_add_to_cart_button'
+    );
+    if (btn && !btn.disabled) { btn.click(); return true; }
+    return false;
+  });
+}
+
+async function waitForCartDrawer(page, timeout = 15000) {
+  return page
+    .waitForFunction(
+      () => {
+        const overlay = document.querySelector('.wc-block-components-drawer__screen-overlay');
+        const drawer = document.querySelector('.wc-block-mini-cart__drawer');
+        if (overlay && getComputedStyle(overlay).display !== 'none') return true;
+        if (drawer && drawer.classList.contains('is-open')) return true;
+        return document.body.classList.contains('has-drawer-open');
+      },
+      { timeout }
+    )
+    .then(() => true)
+    .catch(() => false);
 }
 
 /* =========================================================
@@ -179,56 +274,14 @@ async function testCartDrawer(browser, vp) {
     return;
   }
 
-  const hasForm = await page.evaluate(() =>
-    !!(document.querySelector('form.cart') || document.querySelector('form.variations_form'))
-  );
-  if (!hasForm) {
-    record('Cart Drawer · abre por AJAX ao submeter o formulário', 'skip', 'formulário de produto (form.cart) não encontrado.');
-    await page.close();
-    return;
-  }
-
-  // Selecionar a primeira variação (tamanho) disponível, se existir.
-  await page.evaluate(() => {
-    const sel = document.querySelector('form.cart select, form.variations_form select, .variations select');
-    if (sel) {
-      const opt = Array.from(sel.options).find((o) => o.value && o.value !== '0');
-      if (opt) {
-        sel.value = opt.value;
-        sel.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    }
-  });
-
-  await sleep(500);
-
-  const clicked = await page.evaluate(() => {
-    const btn = document.querySelector(
-      'form.cart button[type="submit"], form.variations_form button[type="submit"], button.single_add_to_cart_button, form.cart .single_add_to_cart_button'
-    );
-    if (btn) { btn.click(); return true; }
-    return false;
-  });
-
+  const clicked = await addFirstVariationToCart(page);
   if (!clicked) {
-    record('Cart Drawer · abre por AJAX ao submeter o formulário', 'skip', 'botão de adicionar ao carrinho não encontrado.');
+    record('Cart Drawer · abre por AJAX ao submeter o formulário', 'skip', 'botão de adicionar ao carrinho não encontrado/ativo.');
     await page.close();
     return;
   }
 
-  const opened = await page
-    .waitForFunction(
-      () => {
-        const overlay = document.querySelector('.wc-block-components-drawer__screen-overlay');
-        const drawer = document.querySelector('.wc-block-mini-cart__drawer');
-        if (overlay && getComputedStyle(overlay).display !== 'none') return true;
-        if (drawer && drawer.classList.contains('is-open')) return true;
-        return document.body.classList.contains('has-drawer-open');
-      },
-      { timeout: 15000 }
-    )
-    .then(() => true)
-    .catch(() => false);
+  const opened = await waitForCartDrawer(page);
 
   record('Cart Drawer · abre por AJAX ao submeter o formulário', opened ? 'pass' : 'fail',
     opened ? 'drawer aberto após submissão AJAX.' : 'drawer não abriu após submissão AJAX (verificar wod-add-to-cart.js / WooCommerce).');
@@ -236,6 +289,75 @@ async function testCartDrawer(browser, vp) {
   await page
     .screenshot({ path: path.join(SCREENSHOT_DIR, 'cart-drawer-ajax.png') })
     .catch(() => {});
+
+  await page.close();
+}
+
+async function testCheckoutE2E(browser, viewports) {
+  console.log(`\n▶ Checkout E2E (com artigo no cesto)`);
+  const product = PAGES.find((p) => p.name === 'product');
+  const checkout = PAGES.find((p) => p.name === 'checkout');
+  const page = await browser.newPage();
+  await page.setViewport(viewports[0]);
+
+  // 1) Adicionar uma t-shirt ao cesto via AJAX (mesma sessão de teste).
+  await goto(page, product.url);
+  const prodState = await readPageState(page);
+  if (prodState.comingSoon) {
+    record('Checkout E2E · setup (adicionar t-shirt)', 'skip', 'ficha de produto não carregou (loja não acessível).');
+    await page.close();
+    return;
+  }
+
+  const clicked = await addFirstVariationToCart(page);
+  const drawerOpened = clicked ? await waitForCartDrawer(page) : false;
+  if (!clicked || !drawerOpened) {
+    record('Checkout E2E · setup (adicionar t-shirt)', 'skip', 'não foi possível adicionar a t-shirt ao cesto via AJAX.');
+    await page.close();
+    return;
+  }
+  record('Checkout E2E · setup (adicionar t-shirt)', 'pass', 't-shirt adicionada ao cesto; cookie de sessão ativo.');
+
+  // Pequena pausa para a sessão do carrinho assentar antes de navegar.
+  await sleep(1200);
+
+  // 2) Validar o checkout nos 3 viewports (sem redirect 302 para /carrinho/).
+  let redirectedToCart = false;
+  let formPresent = false;
+  let finalStatus = null;
+  let finalUrl = '';
+
+  for (const vp of viewports) {
+    await page.setViewport(vp);
+
+    const nav = await rawGoto(page, checkout.url);
+    finalStatus = nav.status;
+    finalUrl = nav.finalUrl;
+    const chain = nav.redirectChain || [];
+    if (/\/carrinho\/?/i.test(nav.finalUrl) || chain.some((u) => /\/carrinho\/?/i.test(u))) {
+      redirectedToCart = true;
+    }
+
+    const state = await readPageState(page);
+    assertOverflow(state, `checkout-e2e · ${vp.name}`);
+
+    if (await page.evaluate(() => !!(document.querySelector('form.checkout') || document.querySelector('.woocommerce-checkout')))) {
+      formPresent = true;
+    }
+
+    if (vp.name === 'mobile') {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'checkout-real-mobile.png') }).catch(() => {});
+    } else if (vp.name === 'desktop') {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'checkout-real-desktop.png') }).catch(() => {});
+    }
+  }
+
+  record('Checkout E2E · HTTP 200 e sem redirect 302 p/ /carrinho/',
+    finalStatus === 200 && !redirectedToCart ? 'pass' : 'fail',
+    `status=${finalStatus}, redirectToCart=${redirectedToCart}, url=${finalUrl}`);
+  record('Checkout E2E · formulário de finalização (form.checkout / .woocommerce-checkout)',
+    formPresent ? 'pass' : 'fail',
+    formPresent ? 'formulário presente no DOM.' : 'formulário ausente no DOM.');
 
   await page.close();
 }
@@ -296,6 +418,7 @@ async function run() {
 
     await testMobileMenu(browser, VIEWPORTS[0]);
     await testCartDrawer(browser, VIEWPORTS[0]);
+    await testCheckoutE2E(browser, VIEWPORTS);
   } finally {
     await browser.close();
   }
