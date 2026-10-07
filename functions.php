@@ -58,11 +58,17 @@ if ( ! function_exists( 'extendable_styles' ) ) :
 	function extendable_styles() {
 
 		// Register theme stylesheet.
+		// Cache-busting: usa o mtime do ficheiro para que, após cada deploy,
+		// os navegadores (incl. mobile) descarreguem o CSS novo de imediato.
+		$style_version = file_exists( get_stylesheet_directory() . '/style.css' )
+			? filemtime( get_stylesheet_directory() . '/style.css' )
+			: EXTENDABLE_THEME_VERSION;
+
 		wp_register_style(
 			'extendable-style',
 			get_template_directory_uri() . '/style.css',
 			array(),
-			'2.5.0'
+			$style_version
 		);
 
 		// Enqueue theme stylesheet.
@@ -124,11 +130,16 @@ add_action( 'enqueue_block_assets', 'extendable_enqueue_block_styles' );
  * @return void
  */
 function extendable_enqueue_wod_carousel() {
+	// Cache-busting: versão baseada no mtime do ficheiro JS.
+	$carousel_version = file_exists( get_stylesheet_directory() . '/assets/js/wod-carousel.js' )
+		? filemtime( get_stylesheet_directory() . '/assets/js/wod-carousel.js' )
+		: EXTENDABLE_THEME_VERSION;
+
 	wp_enqueue_script(
 		'extendable-wod-carousel',
 		get_template_directory_uri() . '/assets/js/wod-carousel.js',
 		array(),
-		EXTENDABLE_THEME_VERSION,
+		$carousel_version,
 		true
 	);
 
@@ -679,3 +690,82 @@ function extendable_prices_callback() {
 
 	return $response;
 }
+
+/**
+ * Bypass total de cache (servidor / CDN) nas páginas públicas.
+ *
+ * Envia cabeçalhos estritos de no-cache para visitantes (não admin),
+ * garantindo visualização em tempo real após cada deploy.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_send_no_cache_headers() {
+	if ( is_admin() ) {
+		return;
+	}
+
+	header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+	header( 'Pragma: no-cache' );
+	header( 'Expires: Wed, 11 Jan 1984 05:00:00 GMT' );
+}
+add_action( 'send_headers', 'extendable_send_no_cache_headers' );
+
+/**
+ * Desativa forçadamente o "Coming Soon" do WooCommerce.
+ *
+ * @since Extendable 2.5.0
+ */
+add_filter( 'woocommerce_coming_soon_exclude', '__return_true' );
+
+function extendable_force_woocommerce_live() {
+	if ( 'no' !== get_option( 'woocommerce_coming_soon' ) ) {
+		update_option( 'woocommerce_coming_soon', 'no' );
+	}
+	if ( 'no' !== get_option( 'woocommerce_store_pages_only' ) ) {
+		update_option( 'woocommerce_store_pages_only', 'no' );
+	}
+}
+add_action( 'init', 'extendable_force_woocommerce_live' );
+
+/**
+ * One-time stock fix: T-Shirts Jonny D (243 preto, 244 branco) em 'instock'
+ * com todas as variações disponíveis.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_sync_jonny_d_stock() {
+	if ( get_option( 'wod_jonnyd_stock_synced_v1' ) ) {
+		return;
+	}
+	if ( ! function_exists( 'wc_get_product' ) ) {
+		return;
+	}
+
+	$product_ids = array( 243, 244 );
+
+	foreach ( $product_ids as $product_id ) {
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			continue;
+		}
+
+		$product->set_stock_status( 'instock' );
+		$product->save();
+
+		if ( $product->is_type( 'variable' ) ) {
+			foreach ( $product->get_children() as $variation_id ) {
+				$variation = wc_get_product( $variation_id );
+				if ( ! $variation ) {
+					continue;
+				}
+
+				$variation->set_manage_stock( false );
+				$variation->set_stock_status( 'instock' );
+				$variation->save();
+			}
+		}
+	}
+
+	update_option( 'wod_jonnyd_stock_synced_v1', true );
+}
+add_action( 'init', 'extendable_sync_jonny_d_stock', 20 );
