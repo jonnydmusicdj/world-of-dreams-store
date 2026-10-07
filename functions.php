@@ -769,3 +769,52 @@ function extendable_sync_jonny_d_stock() {
 	update_option( 'wod_jonnyd_stock_synced_v1', true );
 }
 add_action( 'init', 'extendable_sync_jonny_d_stock', 20 );
+
+/**
+ * One-time price fix: define 20,00 € nas T-Shirts Jonny D (243 preto,
+ * 244 branco) e respetivas variações. Sem preço, o WooCommerce marca
+ * is_purchasable() como false e esconde as variações no front-end.
+ *
+ * @since Extendable 2.5.0
+ */
+function extendable_sync_jonny_d_prices() {
+	if ( get_option( 'wod_jonnyd_prices_synced_v1' ) ) {
+		return;
+	}
+	if ( ! function_exists( 'wc_get_product' ) ) {
+		return;
+	}
+
+	$product_ids = array( 243, 244 );
+	$price       = '20';
+
+	foreach ( $product_ids as $product_id ) {
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			continue;
+		}
+
+		// Preço do produto pai (variável).
+		$product->set_regular_price( $price );
+		$product->set_price( $price );
+		$product->save();
+
+		// Preço de cada variação (255–258 e 261–264).
+		foreach ( $product->get_children() as $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+			if ( ! $variation ) {
+				continue;
+			}
+
+			$variation->set_regular_price( $price );
+			$variation->set_price( $price );
+			$variation->save();
+		}
+
+		// Força o recálculo do range de preços do produto pai.
+		wc_delete_product_transients( $product_id );
+	}
+
+	update_option( 'wod_jonnyd_prices_synced_v1', true );
+}
+add_action( 'init', 'extendable_sync_jonny_d_prices', 25 );
